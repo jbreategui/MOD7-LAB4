@@ -1,6 +1,6 @@
 openapi: "3.0.3"
 info:
-  title: "Cuentas Bancarias API"
+  title: "Cuentas Bancarias API prueba"
   # --- FASE 1: GOBERNANZA DEL CONTRATO (ERROR INTENCIONAL 1) ---
   version: "" #  ERROR: La versión no debe estar vacía. ACCIÓN: Cambia a "1.0.0"
   description: |
