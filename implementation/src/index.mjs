@@ -1,13 +1,16 @@
 // ============================================================
 // Lambda Handler — Cuentas Bancarias API
-// Endpoint: GET /clientes/{clienteId}/cuentas
+// Endpoints: GET y POST /clientes/{clienteId}/cuentas
 // ============================================================
 
 export const handler = async (event) => {
   console.log("Event received:", JSON.stringify(event, null, 2));
 
-  const clienteId = event.pathParameters?.['cliente-id'] || event.pathParameters?.clienteId;
-  const httpMethod = event.httpMethod;
+  const clienteId =
+    event.pathParameters?.["cliente-id"] || event.pathParameters?.clienteId;
+
+  // Compatible con REST API (v1) y HTTP API (v2)
+  const httpMethod = event.httpMethod || event.requestContext?.http?.method;
 
   // ── Headers CORS ──
   const headers = {
@@ -16,6 +19,15 @@ export const handler = async (event) => {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, x-api-key, Idempotency-Key",
   };
+
+  // ── Preflight CORS (el navegador lo envía antes del GET/POST) ──
+  if (httpMethod === "OPTIONS") {
+    return {
+      statusCode: 200,
+      headers,
+      body: "",
+    };
+  }
 
   // ── Validar clienteId ──
   if (!clienteId) {
@@ -73,7 +85,7 @@ export const handler = async (event) => {
           type: "https://api.banco.com/errors/not-found",
           title: "Cliente no encontrado",
           status: 404,
-          detail: `No se encontró el cliente con ID '${clienteId}'.`,
+          detail: \`No se encontró el cliente con ID '\${clienteId}'.\`,
           instance: event.path,
         }),
       };
@@ -89,9 +101,7 @@ export const handler = async (event) => {
     };
   }
 
-  // ── POST /clientes/{clienteId}/cuentas (para Lab Propuesto) ──
-  // --- LABORATORIO PROPUESTO: DESCOMENTAR PARA IMPLEMENTAR EL POST ---
-  /*
+  // ── POST /clientes/{clienteId}/cuentas (Lab Propuesto) ──
   if (httpMethod === "POST") {
     let body;
     try {
@@ -129,12 +139,14 @@ export const handler = async (event) => {
 
     // Simular creación de cuenta
     const nuevaCuenta = {
-      numeroCuenta: Math.floor(Math.random() * 10000000000).toString().padStart(10, '0'),
+      numeroCuenta: Math.floor(Math.random() * 10000000000)
+        .toString()
+        .padStart(10, "0"),
       tipo: tipo.toUpperCase(),
       moneda: moneda.toUpperCase(),
       titular: titular,
-      saldo: 0.00,
-      creadoEn: new Date().toISOString()
+      saldo: 0.0,
+      creadoEn: new Date().toISOString(),
     };
 
     return {
@@ -143,7 +155,6 @@ export const handler = async (event) => {
       body: JSON.stringify(nuevaCuenta),
     };
   }
-  */
 
   // ── Método no soportado ──
   return {
@@ -153,7 +164,7 @@ export const handler = async (event) => {
       type: "https://api.banco.com/errors/method-not-allowed",
       title: "Método no permitido",
       status: 405,
-      detail: `El método ${httpMethod} no está soportado para este recurso.`,
+      detail: \`El método \${httpMethod} no está soportado para este recurso.\`,
       instance: event.path,
     }),
   };
